@@ -3,6 +3,9 @@ export class UserRepo {
 
   async salvar(user) {
     this.users.push(user);
-    console.log(this.users);
+  }
+
+  async get() {
+    return this.users;
   }
 }
