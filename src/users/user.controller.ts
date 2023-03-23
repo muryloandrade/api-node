@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { UserRepo } from './user.repository';
 
 @Controller('/user')
@@ -15,5 +15,12 @@ export class UserController {
   @Get()
   async get() {
     return this.usuarioRepository.get();
+  }
+  @Delete()
+  async delete(@Body() email) {
+    this.usuarioRepository.delete(email);
+    return {
+      message: 'User deleted',
+    };
   }
 }
