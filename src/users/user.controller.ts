@@ -1,26 +1,72 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
-import { UserRepo } from './user.repository';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
+import { UsuarioRepository } from './user.repository';
+import { CriaUsuarioDTO } from './dto/CriaUsuario.dto';
+import { UsuarioEntity } from './usuario.entity';
+import { ListaUsuarioDTO } from './dto/ListaUsuario.dto';
+import { AtualizaUsuarioDTO } from './dto/AtualizaUsuario.dto';
 
-@Controller('/user')
-export class UserController {
-  constructor(private usuarioRepository: UserRepo) {}
+@Controller('/usuarios')
+export class UsuarioController {
+  constructor(private usuarioRepository: UsuarioRepository) {}
+
   @Post()
-  async create(@Body() dataUser) {
-    this.usuarioRepository.salvar(dataUser);
+  async criaUsuario(@Body() dadosDoUsuario: CriaUsuarioDTO) {
+    const usuarioEntity = new UsuarioEntity();
+    usuarioEntity.email = dadosDoUsuario.email;
+    usuarioEntity.senha = dadosDoUsuario.senha;
+    usuarioEntity.nome = dadosDoUsuario.nome;
+    usuarioEntity.id = uuid();
+
+    this.usuarioRepository.salvar(usuarioEntity);
+
     return {
-      message: 'User created',
-      data: dataUser,
+      usuario: new ListaUsuarioDTO(usuarioEntity.id, usuarioEntity.nome),
+      messagem: 'usuário criado com sucesso',
     };
   }
+
   @Get()
-  async get() {
-    return this.usuarioRepository.get();
+  async listUsuarios() {
+    const usuariosSalvos = await this.usuarioRepository.listar();
+    const usuariosLista = usuariosSalvos.map(
+      (usuario) => new ListaUsuarioDTO(usuario.id, usuario.nome),
+    );
+
+    return usuariosLista;
   }
-  @Delete()
-  async delete(@Body() email) {
-    this.usuarioRepository.delete(email);
+
+  @Put('/:id')
+  async atualizaUsuario(
+    @Param('id') id: string,
+    @Body() novosDados: AtualizaUsuarioDTO,
+  ) {
+    const usuarioAtualizado = await this.usuarioRepository.atualiza(
+      id,
+      novosDados,
+    );
+
     return {
-      message: 'User deleted',
+      usuario: usuarioAtualizado,
+      messagem: 'usuário atualizado com sucesso',
+    };
+  }
+
+  @Delete('/:id')
+  async removeUsuario(@Param('id') id: string) {
+    const usuarioRemovido = await this.usuarioRepository.remove(id);
+
+    return {
+      usuario: usuarioRemovido,
+      messagem: 'usuário removido com suceso',
     };
   }
 }
